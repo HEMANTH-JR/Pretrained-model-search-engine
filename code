@@ -1,0 +1,24 @@
+from sentence_transformers import SentenceTransformer
+import faiss, numpy as np
+
+docs = [
+    "Bengaluru is the capital of Karnataka.",
+    "Python is a popular programming language.",
+    "Transformers are the architecture behind modern LLMs.",
+]
+
+# Steps 1-4: embed documents and index them
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
+doc_vecs = embedder.encode(docs)
+index = faiss.IndexFlatL2(doc_vecs.shape[1])
+index.add(np.array(doc_vecs))
+
+# Step 5: search
+query = "What architecture do LLMs use?"
+q_vec = embedder.encode([query])
+_, ids = index.search(np.array(q_vec), k=1)
+context = docs[ids[0][0]]
+
+# Step 6: send to an LLM (any API or open model)
+prompt = f"Answer using this context:\n{context}\n\nQuestion: {query}"
+print(prompt)  # pass this to an LLM to get the final answer
